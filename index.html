@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Azka Panel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
+body{background:#fdf6e3;color:#1a1a1a;min-height:100vh;padding:20px}
+.card{max-width:400px;margin:30px auto;background:#fff;border:3px solid #1a1a1a;border-radius:20px;padding:25px;box-shadow:6px 6px 0 #1a1a1a;text-align:center}
+h1{font-size:22px;margin-bottom:8px}
+p{font-size:12px;color:#666;margin-bottom:15px}
+.tabs{display:flex;gap:8px;margin-bottom:15px}
+.tab{flex:1;padding:10px;background:#fdf6e3;border:3px solid #1a1a1a;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer}
+.tab.active{background:#8b5cf6;color:#fff}
+label{display:block;text-align:left;font-size:12px;font-weight:700;margin:8px 0 4px}
+input{width:100%;padding:12px;border:3px solid #1a1a1a;border-radius:10px;background:#fdf6e3;font-size:14px;outline:none}
+button.auth{width:100%;padding:14px;background:#8b5cf6;color:#fff;border:3px solid #1a1a1a;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:4px 4px 0 #1a1a1a;margin-top:15px}
+button.auth:disabled{opacity:0.6}
+.msg{margin-top:12px;font-size:13px;font-weight:700;padding:8px;border-radius:8px;min-height:20px}
+.msg.err{color:#dc2626;background:#fee2e2}
+.msg.ok{color:#16a34a;background:#dcfce7}
+#appScreen{display:none}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px}
+.tool{border:3px solid #1a1a1a;border-radius:15px;padding:15px;box-shadow:4px 4px 0 #1a1a1a;cursor:pointer;text-align:center;font-weight:800;font-size:13px}
+.tool .ico{font-size:28px;display:block;margin-bottom:6px}
+.logout{width:100%;padding:14px;background:#dc2626;color:#fff;border:3px solid #1a1a1a;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:4px 4px 0 #1a1a1a}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="card">
+    <h1>🔥 Azka Panel</h1>
+    <p id="subtitle">Login dulu buat pake tools</p>
+    <div class="tabs">
+      <div class="tab active" id="tabL" onclick="setMode('login')">LOGIN</div>
+      <div class="tab" id="tabR" onclick="setMode('register')">REGISTER</div>
+    </div>
+    <label>Username</label>
+    <input type="text" id="inpUser" placeholder="azka" autocomplete="off">
+    <label>Password</label>
+    <input type="password" id="inpPass" placeholder="min 5 karakter">
+    <button class="auth" id="btnAuth" onclick="doAuth()">Masuk</button>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+</div>
+
+<div id="appScreen">
+  <div class="card">
+    <h1>🔥 Azka Panel</h1>
+    <p>Semua tools dalam satu aplikasi.</p>
+    <div class="grid">
+      <div class="tool" style="background:#bae6fd" onclick="openTool('ff')"><span class="ico">🎯</span>FREE FIRE</div>
+      <div class="tool" style="background:#bbf7d0" onclick="openTool('ml')"><span class="ico">🎮</span>ML</div>
+      <div class="tool" style="background:#fbcfe8" onclick="openTool('tiktok')"><span class="ico">⬇️</span>TIKTOK</div>
+      <div class="tool" style="background:#fef08a" onclick="openTool('pinterest')"><span class="ico">⬇️</span>PINTEREST</div>
+      <div class="tool" style="background:#ddd6fe" onclick="openTool('ai')"><span class="ico">🤖</span>AI</div>
+      <div class="tool" style="background:#fed7aa" onclick="openTool('ssweb')"><span class="ico">📸</span>SS WEB</div>
+    </div>
+  </div>
+  <div class="card">
+    <h2 id="profName" style="font-size:18px;margin-bottom:8px">Azka</h2>
+    <p id="profStatus">Member Aktif</p>
+    <button class="logout" onclick="doLogout()">🚪 Logout</button>
+  </div>
+</div>
+
+<div id="modalX" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;padding:20px;overflow-y:auto"></div>
+
+<script>
+var API_KEY='PREMIUM03DYWHDHWHFHAJXSJFHAJS';
+var mode='login';
+
+function setMode(m){
+  mode=m;
+  document.getElementById('tabL').classList.toggle('active',m==='login');
+  document.getElementById('tabR').classList.toggle('active',m==='register');
+  document.getElementById('btnAuth').innerText=m==='login'?'Masuk':'Daftar';
+  document.getElementById('subtitle').innerText=m==='login'?'Login dulu buat pake tools':'Bikin akun baru';
+  var msg=document.getElementById('loginMsg');
+  msg.className='msg';msg.innerText='';
+}
+
+function doAuth(){
+  var nama=document.getElementById('inpUser').value.trim();
+  var password=document.getElementById('inpPass').value.trim();
+  var msg=document.getElementById('loginMsg');
+  var btn=document.getElementById('btnAuth');
+  if(!nama||!password){msg.className='msg err';msg.innerText='Isi username dan password!';return;}
+  if(mode==='register'&&nama.length<3){msg.className='msg err';msg.innerText='Username min 3 karakter!';return;}
+  if(mode==='register'&&password.length<5){msg.className='msg err';msg.innerText='Password min 5 karakter!';return;}
+  btn.disabled=true;btn.innerText='Loading...';
+  msg.className='msg';msg.innerText='';
+  var xhr=new XMLHttpRequest();
+  xhr.timeout=15000;
+  xhr.onload=function(){
+    btn.disabled=false;btn.innerText=mode==='login'?'Masuk':'Daftar';
+    try{
+      var data=JSON.parse(xhr.responseText);
+      if(data.success){
+        msg.className='msg ok';msg.innerText='OK '+data.message;
+        if(mode==='login'){
+          localStorage.setItem('azka_user',JSON.stringify(data.user));
+          setTimeout(showApp,600);
+        }else{setTimeout(function(){setMode('login');},1200);}
+      }else{msg.className='msg err';msg.innerText='X '+data.message;}
+    }catch(e){msg.className='msg err';msg.innerText='X Respon gak valid!';}
+  };
+  xhr.onerror=function(){btn.disabled=false;btn.innerText=mode==='login'?'Masuk':'Daftar';msg.className='msg err';msg.innerText='X Server gak jalan!';};
+  xhr.ontimeout=function(){btn.disabled=false;btn.innerText=mode==='login'?'Masuk':'Daftar';msg.className='msg err';msg.innerText='X Timeout!';};
+  var ep = mode==='login'?'/api/login':'/api/register';
+  xhr.open('GET', ep+'?nama='+encodeURIComponent(nama)+'&password='+encodeURIComponent(password), true);
+  xhr.send();
+}
+
+function doLogout(){if(confirm('Logout?')){localStorage.removeItem('azka_user');location.reload();}}
+
+function showApp(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appScreen').style.display='block';
+  var u=JSON.parse(localStorage.getItem('azka_user'));
+  document.getElementById('profName').innerText=u.nama;
+  document.getElementById('profStatus').innerText=(u.role==='admin'?'Admin':'Member Aktif');
+}
+
+function closeModal(){document.getElementById('modalX').style.display='none';}
+
+function openTool(id){
+  var m=document.getElementById('modalX');
+  m.style.display='block';
+  var inp='style="width:100%;padding:12px;border:3px solid #1a1a1a;border-radius:10px;background:#fff;font-size:14px;outline:none;margin:6px 0"';
+  var btn='style="width:100%;padding:14px;background:#8b5cf6;color:#fff;border:3px solid #1a1a1a;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:4px 4px 0 #1a1a1a;margin-top:10px"';
+  var lbl='style="display:block;font-weight:700;font-size:12px;margin:8px 0 4px"';
+  var forms={
+    ff:'<label '+lbl+'>ID Free Fire</label><input type="text" id="inp-ff" placeholder="3616810990" '+inp+'><button '+btn+' onclick="runFF()">Cek</button>',
+    ml:'<label '+lbl+'>ID ML</label><input type="text" id="inp-mlid" '+inp+'><label '+lbl+'>Server</label><input type="text" id="inp-mlsv" '+inp+'><button '+btn+' onclick="runML()">Cek</button>',
+    tiktok:'<label '+lbl+'>Link TikTok</label><input type="text" id="inp-tt" '+inp+'><button '+btn+' onclick="runTT()">Download</button>',
+    pinterest:'<label '+lbl+'>Kata kunci</label><input type="text" id="inp-pin" '+inp+'><button '+btn+' onclick="runPIN()">Cari</button>',
+    ai:'<label '+lbl+'>AI</label><select id="inp-ai" '+inp+'><option value="gemini">Gemini</option><option value="cici">Cici</option><option value="unliai">Unlimited</option></select><label '+lbl+'>Pertanyaan</label><input type="text" id="inp-aip" '+inp+'><button '+btn+' onclick="runAI()">Kirim</button>',
+    ssweb:'<label '+lbl+'>URL</label><input type="text" id="inp-ssw" '+inp+'><button '+btn+' onclick="runSSW()">SS</button>'
+  };
+  var titles={ff:'🎯 Free Fire',ml:'🎮 ML',tiktok:'🎵 TikTok',pinterest:'📌 Pinterest',ai:'🤖 AI',ssweb:'📸 SS Web'};
+  m.innerHTML='<div style="max-width:440px;margin:40px auto;background:#fdf6e3;border:3px solid #1a1a1a;border-radius:20px;padding:20px;box-shadow:6px 6px 0 #1a1a1a"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px"><h2>'+titles[id]+'</h2><button onclick="closeModal()" style="width:34px;height:34px;background:#fecaca;border:3px solid #1a1a1a;border-radius:10px;font-weight:900;cursor:pointer">✕</button></div>'+(forms[id]||'')+'<div id="hasilX" style="margin-top:15px;display:none;padding:14px;background:#fff;border:3px solid #1a1a1a;border-radius:10px;font-size:13px"></div></div>';
+}
+
+function setR(html){var h=document.getElementById('hasilX');h.innerHTML=html;h.style.display='block';}
+function api(u){return 'https://hyerls.my.id/api/'+u+'?key='+API_KEY;}
+
+async function runFF(){
+  var id=document.getElementById('inp-ff').value.trim();
+  if(!id)return alert('Isi!');
+  try{var r=await fetch(api('cekidff.php')+'&id='+id);var d=await r.json();
+    if(d.success){var x=d.data;setR('<b>OK</b><br>ID: '+x.id+'<br>Nick: '+(x.nickname||'-'));}
+    else setR('X Gagal');}catch(e){setR('X '+e.message);}
+}
+
+async function runML(){
+  var id=document.getElementById('inp-mlid').value.trim();
+  var sv=document.getElementById('inp-mlsv').value.trim();
+  if(!id||!sv)return alert('Isi!');
+  try{var r=await fetch(api('cekml.php')+'&id='+id+'&server='+sv);var d=await r.json();
+    if(d.success){var x=d.data;setR('<b>OK</b><br>ID: '+x.id+'<br>Nick: '+(x.nickname||'-'));}
+    else setR('X Gagal');}catch(e){setR('X '+e.message);}
+}
+
+async function runTT(){
+  var url=document.getElementById('inp-tt').value.trim();
+  if(!url)return alert('Isi!');
+  try{var r=await fetch(api('tiktok.php')+'&url='+encodeURIComponent(url));var d=await r.json();
+    if(d.success){var x=d.data||d;var vid=x.video_url||x.download_url||x.url||x.play;var h='<b>OK</b><br>';if(x.cover)h+='<img src="'+x.cover+'" style="width:100%;border-radius:8px">';if(vid)h+='<a href="'+vid+'" target="_blank" style="display:block;padding:10px;background:#8b5cf6;color:#fff;text-decoration:none;border-radius:8px;text-align:center;margin-top:8px">📥 Download</a>';setR(h);}
+    else setR('X Gagal');}catch(e){setR('X '+e.message);}
+}
+
+async function runPIN(){
+  var q=document.getElementById('inp-pin').value.trim();
+  if(!q)return alert('Isi!');
+  try{var r=await fetch(api('pint.php')+'&query='+encodeURIComponent(q));var d=await r.json();
+    if(d.success&&d.results){var h='<b>OK '+d.count+' hasil</b><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';d.results.slice(0,6).forEach(function(it){if(it.image_url)h+='<img src="'+it.image_url+'" style="width:100%;border-radius:8px">';});h+='</div>';setR(h);}
+    else setR('X Gak ada');}catch(e){setR('X '+e.message);}
+}
+
+async function runAI(){
+  var m=document.getElementById('inp-ai').value;
+  var p=document.getElementById('inp-aip').value.trim();
+  if(!p)return alert('Isi!');
+  var map={gemini:'gemini.php?text=',cici:'cici.php?prompt=',unliai:'unliai.php?teks='};
+  var url=api(map[m].split('?')[0])+'&'+map[m].split('?')[1]+encodeURIComponent(p);
+  try{var r=await fetch(url);var raw=await r.text();var ans=raw;
+    try{var d=JSON.parse(raw);ans=d.result||d.response||d.answer||d.message||d.text||d.data||JSON.stringify(d);}catch(e){}
+    setR('<b>🤖 '+m+'</b><br>'+ans);}catch(e){setR('X '+e.message);}
+}
+
+function runSSW(){
+  var url=document.getElementById('inp-ssw').value.trim();
+  if(!url)return alert('Isi!');
+  var u=api('screenshot.php')+'&url='+encodeURIComponent(url);
+  setR('<b>OK</b><img src="'+u+'" style="width:100%;border-radius:8px;margin-top:8px">');
+}
+
+document.getElementById('inpPass').addEventListener('keypress',function(e){if(e.key==='Enter')doAuth();});
+
+(function(){if(localStorage.getItem('azka_user'))showApp();})();
+</script>
+</body>
+  </html>
